@@ -3,15 +3,13 @@ import ssl
 import socket
 import os
 import argparse
-from rich.console import Console
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib import colors
-from textwrap import wrap
 import json
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from rich.console import Console
+from rich.table import Table as RichTable
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table as RLTable, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
+from reportlab.lib import colors
 
 def whois_lookup(domain):
     try:
@@ -29,7 +27,7 @@ def ssl_certificate_info(domain):
                 return str(certificate)
     except Exception as e:
         return str(e)
-    
+
 def format_json(json_str):
     try:
         json_data = json.loads(json_str)
@@ -37,25 +35,23 @@ def format_json(json_str):
         return formatted_json
     except json.JSONDecodeError:
         return json_str
-    
+
 def format_cell(text, style):
-    # Ensure text is a string
     text = str(text) if text is not None else "None"
     return Paragraph(text, style)
 
-    
 def parse_json_for_table(json_str):
     try:
         json_data = json.loads(json_str)
         table_data = [["Key", "Value"]]
         for key, value in json_data.items():
             if value is None:
-                value = "None"  # Convert None to a string
+                value = "None"
             elif isinstance(value, list):
                 value = ', '.join(str(v) if v is not None else "None" for v in value)
             elif isinstance(value, dict):
-                value = json.dumps(value, indent=2)  # Nested JSON formatting
-            table_data.append([key, str(value)])  # Ensure all values are strings
+                value = json.dumps(value, indent=2)
+            table_data.append([key, str(value)])
         return table_data
     except json.JSONDecodeError:
         return [["Error", "Invalid JSON data"]]
@@ -66,36 +62,31 @@ def create_pdf(domain, whois_info, ssl_info, output_dir):
     elements = []
     styles = getSampleStyleSheet()
 
-    # Custom style for the title
     title_style = styles['Title'].clone('TitleStyle')
     title_style.textColor = colors.darkblue
-    title_style.alignment = 1  # Center alignment
+    title_style.alignment = 1
 
-    # Custom style for table cells
     cell_style = ParagraphStyle('CellStyle')
-    cell_style.wordWrap = 'CJK'  # Allows word wrapping in cells
+    cell_style.wordWrap = 'CJK'
     cell_style.fontSize = 10
-    cell_style.leading = 12  # Space between lines
+    cell_style.leading = 12
 
-    # Title
     title = f"Domain Scan Report for: {domain}"
     elements.append(Paragraph(title, title_style))
 
-    # WHOIS Information Subtitle and Table
     elements.append(Paragraph("WHOIS Information:", styles['Heading2']))
     whois_data = parse_json_for_table(format_json(whois_info))
     whois_data_formatted = [[format_cell(cell, cell_style) for cell in row] for row in whois_data]
-    whois_table = Table(whois_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
+    whois_table = RLTable(whois_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
     whois_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
                                      ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
                                      ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
     elements.append(whois_table)
 
-    # SSL Certificate Information Subtitle and Table
     elements.append(Paragraph("SSL Certificate Information:", styles['Heading2']))
     ssl_data = parse_json_for_table(format_json(ssl_info))
     ssl_data_formatted = [[format_cell(cell, cell_style) for cell in row] for row in ssl_data]
-    ssl_table = Table(ssl_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
+    ssl_table = RLTable(ssl_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
     ssl_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
                                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
                                    ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
@@ -113,16 +104,24 @@ def save_text_file(domain, whois_info, ssl_info, output_dir):
         file.write(ssl_info + "\n")
     return txt_filename
 
-def draw_wrapped_text(c, text, x, y, max_width, font="Helvetica", font_size=12, bold=False):
-    if bold:
-        c.setFont("Helvetica-Bold", font_size)
-    else:
-        c.setFont(font, font_size)
-    wrapped_text = wrap(text, max_width)
-    for line in wrapped_text:
-        c.drawString(x, y, line)
-        y -= 15
-    return y
+def print_results_to_console(whois_info, ssl_info):
+    console = Console()
+
+    whois_data = parse_json_for_table(format_json(whois_info))
+    whois_table = RichTable(title="WHOIS Information", show_header=True, header_style="bold magenta")
+    whois_table.add_column("Key", style="dim", width=12)
+    whois_table.add_column("Value")
+    for key, value in whois_data[1:]:
+        whois_table.add_row(key, value)
+    console.print(whois_table)
+
+    ssl_data = parse_json_for_table(format_json(ssl_info))
+    ssl_table = RichTable(title="SSL Certificate Information", show_header=True, header_style="bold magenta")
+    ssl_table.add_column("Key", style="dim", width=12)
+    ssl_table.add_column("Value")
+    for key, value in ssl_data[1:]:
+        ssl_table.add_row(key, value)
+    console.print(ssl_table)
 
 def main():
     parser = argparse.ArgumentParser(description="Domain Scan Tool")
@@ -130,7 +129,6 @@ def main():
     args = parser.parse_args()
 
     domain = args.domain
-    console = Console()
     output_dir = "output"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -138,10 +136,12 @@ def main():
     whois_info = whois_lookup(domain)
     ssl_info = ssl_certificate_info(domain)
 
-    # Save results to TXT and PDF
+    print_results_to_console(whois_info, ssl_info)
+
     txt_filename = save_text_file(domain, whois_info, ssl_info, output_dir)
     pdf_filename = create_pdf(domain, whois_info, ssl_info, output_dir)
 
+    console = Console()
     console.print(f"\n[bold magenta]Results saved to {txt_filename} and {pdf_filename}[/]")
 
 if __name__ == "__main__":
