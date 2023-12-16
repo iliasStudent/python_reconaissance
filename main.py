@@ -9,6 +9,9 @@ from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from textwrap import wrap
 import json
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
 
 def whois_lookup(domain):
     try:
@@ -34,38 +37,55 @@ def format_json(json_str):
         return formatted_json
     except json.JSONDecodeError:
         return json_str
+    
+def parse_json_for_table(json_str):
+    try:
+        json_data = json.loads(json_str)
+        table_data = [["Key", "Value"]]
+        for key, value in json_data.items():
+            if isinstance(value, list):
+                value = ', '.join(str(v) for v in value)
+            elif isinstance(value, dict):
+                value = json.dumps(value, indent=2)  # Nested JSON formatting
+            table_data.append([key, value])
+        return table_data
+    except json.JSONDecodeError:
+        return [["Error", "Invalid JSON data"]]
 
 def create_pdf(domain, whois_info, ssl_info, output_dir):
     pdf_filename = os.path.join(output_dir, f"{domain}_scan_results.pdf")
-    c = canvas.Canvas(pdf_filename, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+    elements = []
+    styles = getSampleStyleSheet()
 
-    # Centered Title with Blue Color
+    # Custom style for the title
+    title_style = styles['Title'].clone('TitleStyle')
+    title_style.textColor = colors.darkblue
+    title_style.alignment = 1  # Center alignment
+
+    # Title
     title = f"Domain Scan Report for: {domain}"
-    title_font_size = 16
-    c.setFont("Helvetica-Bold", title_font_size)
-    c.setFillColor(colors.darkblue)  # Set color to dark blue for the title
-    title_width = c.stringWidth(title, "Helvetica-Bold", title_font_size)
-    c.drawString((width - title_width) / 2, 750, title)
+    elements.append(Paragraph(title, title_style))
 
-    # Reset color to black for the rest of the text
-    c.setFillColor(colors.black)
+    # WHOIS Information Subtitle
+    elements.append(Paragraph("WHOIS Information:", styles['Heading2']))
+    whois_data = parse_json_for_table(format_json(whois_info))
+    whois_table = Table(whois_data, colWidths=[doc.width/3.0, 2*doc.width/3.0])
+    whois_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                                     ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                                     ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
+    elements.append(whois_table)
 
-    # WHOIS Information
-    y_position = 720
-    y_position = draw_wrapped_text(c, "WHOIS Information:", 50, y_position, 80, bold=True)
-    y_position -= 15
-    formatted_whois = format_json(whois_info)
-    y_position = draw_wrapped_text(c, formatted_whois, 50, y_position, 80)
+    # SSL Certificate Information Subtitle
+    elements.append(Paragraph("SSL Certificate Information:", styles['Heading2']))
+    ssl_data = parse_json_for_table(format_json(ssl_info))
+    ssl_table = Table(ssl_data, colWidths=[doc.width/3.0, 2*doc.width/3.0])
+    ssl_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                                   ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                                   ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
+    elements.append(ssl_table)
 
-    # SSL Certificate Information
-    y_position -= 30
-    y_position = draw_wrapped_text(c, "SSL Certificate Information:", 50, y_position, 80, bold=True)
-    y_position -= 15
-    formatted_ssl = format_json(ssl_info)
-    y_position = draw_wrapped_text(c, formatted_ssl, 50, y_position, 80)
-
-    c.save()
+    doc.build(elements)
     return pdf_filename
 
 def save_text_file(domain, whois_info, ssl_info, output_dir):
