@@ -24,9 +24,10 @@ def ssl_certificate_info(domain):
         with socket.create_connection((domain, 443)) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as sslsock:
                 certificate = sslsock.getpeercert()
-                return str(certificate)
+                return certificate  # Return as a dictionary
     except Exception as e:
         return str(e)
+
 
 def format_json(json_str):
     try:
@@ -75,7 +76,7 @@ def create_pdf(domain, whois_info, ssl_info, output_dir):
     elements.append(Paragraph(title, title_style))
 
     elements.append(Paragraph("WHOIS Information:", styles['Heading2']))
-    whois_data = parse_json_for_table(format_json(whois_info))
+    whois_data = parse_json_for_table(whois_info) if isinstance(whois_info, str) else parse_ssl_for_table(whois_info)
     whois_data_formatted = [[format_cell(cell, cell_style) for cell in row] for row in whois_data]
     whois_table = RLTable(whois_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
     whois_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
@@ -84,7 +85,7 @@ def create_pdf(domain, whois_info, ssl_info, output_dir):
     elements.append(whois_table)
 
     elements.append(Paragraph("SSL Certificate Information:", styles['Heading2']))
-    ssl_data = parse_json_for_table(format_json(ssl_info))
+    ssl_data = parse_json_for_table(ssl_info) if isinstance(ssl_info, str) else parse_ssl_for_table(ssl_info)
     ssl_data_formatted = [[format_cell(cell, cell_style) for cell in row] for row in ssl_data]
     ssl_table = RLTable(ssl_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
     ssl_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
@@ -100,14 +101,21 @@ def save_text_file(domain, whois_info, ssl_info, output_dir):
     with open(txt_filename, 'w') as file:
         file.write("WHOIS Information:\n")
         file.write(whois_info + "\n\n")
+
         file.write("SSL Certificate Information:\n")
-        file.write(ssl_info + "\n")
+        if isinstance(ssl_info, dict):
+            formatted_ssl_info = json.dumps(ssl_info, indent=2)
+            file.write(formatted_ssl_info + "\n")
+        else:
+            file.write(ssl_info + "\n")
     return txt_filename
+
 
 def print_results_to_console(whois_info, ssl_info):
     console = Console()
 
-    whois_data = parse_json_for_table(format_json(whois_info))
+    # WHOIS Information
+    whois_data = parse_json_for_table(whois_info) if isinstance(whois_info, str) else parse_ssl_for_table(whois_info)
     whois_table = RichTable(title="WHOIS Information", show_header=True, header_style="bold magenta")
     whois_table.add_column("Key", style="dim", width=12)
     whois_table.add_column("Value")
@@ -115,13 +123,31 @@ def print_results_to_console(whois_info, ssl_info):
         whois_table.add_row(key, value)
     console.print(whois_table)
 
-    ssl_data = parse_json_for_table(format_json(ssl_info))
+    # SSL Information
+    ssl_data = parse_json_for_table(ssl_info) if isinstance(ssl_info, str) else parse_ssl_for_table(ssl_info)
     ssl_table = RichTable(title="SSL Certificate Information", show_header=True, header_style="bold magenta")
     ssl_table.add_column("Key", style="dim", width=12)
     ssl_table.add_column("Value")
     for key, value in ssl_data[1:]:
         ssl_table.add_row(key, value)
     console.print(ssl_table)
+
+
+def flatten_ssl_data(value):
+    if isinstance(value, (list, tuple)):
+        return ', '.join(flatten_ssl_data(item) for item in value)
+    elif isinstance(value, dict):
+        return json.dumps(value, indent=2)
+    else:
+        return str(value)
+    
+def parse_ssl_for_table(ssl_info):
+    table_data = [["Key", "Value"]]
+    for key, value in ssl_info.items():
+        formatted_value = flatten_ssl_data(value)
+        table_data.append([key, formatted_value])
+    return table_data
+
 
 def main():
     parser = argparse.ArgumentParser(description="Domain Scan Tool")
