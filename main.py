@@ -145,6 +145,9 @@ def parse_ssl_for_table(ssl_info):
     table_data = [["Key", "Value"]]
     for key, value in ssl_info.items():
         formatted_value = flatten_ssl_data(value)
+        # Check if the value is too long and split it
+        if key == "subjectAltName" and len(formatted_value) > 500:  # Example threshold
+            formatted_value = formatted_value[:500] + '... [Truncated]'
         table_data.append([key, formatted_value])
     return table_data
 
