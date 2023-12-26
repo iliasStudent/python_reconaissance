@@ -21,11 +21,23 @@ def main():
     whois_info = whois_lookup.WHOISLookup.lookup(domain)
     ssl_info = ssl_certificate_info.SSLCertificateInfo.lookup(domain)
     internetdb_info = internetdb_lookup.InternetdbLookup.fetch_json_internetdb_ipbased(ip_lookup.IpLookup.get_ip_address(domain))
+    ordered_internetdb_info = {}
+    for key, value in internetdb_info.items():
+        if key == "ports":
+            ordered_internetdb_info["open ports"] = value
+        elif key == "cpes":
+            ordered_internetdb_info["detected services"] = value
+        elif key == "vulns":
+            ordered_internetdb_info["vulnerabilities"] = value
+        else:
+            ordered_internetdb_info[key] = value
+    internetdb_info = ordered_internetdb_info
+        
 
-    report_generator.ReportGenerator.print_results_to_console(whois_info, ssl_info)
+    report_generator.ReportGenerator.print_results_to_console(whois_info, ssl_info, internetdb_info)
 
-    txt_filename = report_generator.ReportGenerator.save_text_file(domain, whois_info, ssl_info, output_dir)
-    pdf_filename = report_generator.ReportGenerator.create_pdf(domain, whois_info, ssl_info, output_dir)
+    txt_filename = report_generator.ReportGenerator.save_text_file(domain, whois_info, ssl_info, internetdb_info, output_dir)
+    pdf_filename = report_generator.ReportGenerator.create_pdf(domain, whois_info, ssl_info, internetdb_info, output_dir)
 
     console = Console()
     console.print(f"\n[bold magenta]Results saved to {txt_filename} and {pdf_filename}[/]")

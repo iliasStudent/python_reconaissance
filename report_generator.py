@@ -7,7 +7,6 @@ from reportlab.platypus import SimpleDocTemplate, Table as RLTable, TableStyle, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import ip_lookup
-import internetdb_lookup
 
 class ReportGenerator:
 
@@ -34,24 +33,9 @@ class ReportGenerator:
             return [["Error", "Invalid JSON data"]]
 
     @staticmethod
-    def create_pdf(domain, whois_info, ssl_info, output_dir):
+    def create_pdf(domain, whois_info, ssl_info, internetdb_info, output_dir):
         # Here internetdb
-        # Get the IP address for the domain
-        ip_address = ip_lookup.IpLookup.get_ip_address(domain)
-        # Fetch internetdb information based on the IP address
-        internetdb_info = internetdb_lookup.InternetdbLookup.fetch_json_internetdb_ipbased(ip_address)
-        # Rename keys in the internetdb_info dictionary
-        ordered_internetdb_info = {}
-        for key, value in internetdb_info.items():
-            if key == "ports":
-                ordered_internetdb_info["open ports"] = value
-            elif key == "cpes":
-                ordered_internetdb_info["detected services"] = value
-            elif key == "vulns":
-                ordered_internetdb_info["vulnerabilities"] = value
-            else:
-                ordered_internetdb_info[key] = value
-        internetdb_info = ordered_internetdb_info
+        
 
         # End internetdb
 
@@ -95,7 +79,7 @@ class ReportGenerator:
         elements.append(ssl_table)
 
         # InternetDB Information Section
-        elements.append(Paragraph("InternetDB Information:", styles['Heading2']))
+        elements.append(Paragraph("Security Scan Information:", styles['Heading2']))
         internetdb_data = ReportGenerator.parse_json_for_table(json.dumps(internetdb_info))
         internetdb_data_formatted = [[ReportGenerator.format_cell(cell, cell_style) for cell in row] for row in internetdb_data]
         internetdb_table = RLTable(internetdb_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
@@ -109,7 +93,7 @@ class ReportGenerator:
     
     
     @staticmethod
-    def save_text_file(domain, whois_info, ssl_info, output_dir):
+    def save_text_file(domain, whois_info, ssl_info, internetdb_info, output_dir):
         txt_filename = os.path.join(output_dir, f"{domain}_scan_results.txt")
         with open(txt_filename, 'w') as file:
             file.write("WHOIS Information:\n")
@@ -121,10 +105,14 @@ class ReportGenerator:
                 file.write(formatted_ssl_info + "\n")
             else:
                 file.write(ssl_info + "\n")
+
+            file.write("InternetDB Information:\n")
+            file.write(json.dumps(internetdb_info, indent=2) + "\n")
+            
         return txt_filename
 
     @staticmethod
-    def print_results_to_console(whois_info, ssl_info):
+    def print_results_to_console(whois_info, ssl_info, internetdb_info):
         console = Console()
 
         
@@ -147,10 +135,14 @@ class ReportGenerator:
             ssl_table.add_row(key, value)
         console.print(ssl_table)
 
-        # InternetDB Information
-        # Fetch internetdb information
-        # ip_address = ip_lookup.IpLookup.get_ip_address(domain)
-        # internetdb_info = internetdb_lookup.InternetdbLookup.fetch_json_internetdb_ipbased(ip_address)
+        # Print InternetDB Information
+        internetdb_data = ReportGenerator.parse_json_for_table(json.dumps(internetdb_info))
+        internetdb_table = RichTable(title="Security Scan Information", show_header=True, header_style="bold magenta")
+        internetdb_table.add_column("Key", style="dim", width=12)
+        internetdb_table.add_column("Value")
+        for key, value in internetdb_data[1:]:
+            internetdb_table.add_row(key, value)
+        console.print(internetdb_table)
 
     @staticmethod
     def flatten_ssl_data(value):
