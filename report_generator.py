@@ -16,18 +16,16 @@ class ReportGenerator:
         return Paragraph(text, style)
 
     @staticmethod    
-    def parse_json_for_table(json_str):
+    def parse_json_for_table(json_str, max_length=100):
         try:
             json_data = json.loads(json_str)
             table_data = [["Key", "Value"]]
             for key, value in json_data.items():
-                if value is None:
-                    value = "None"
-                elif isinstance(value, list):
-                    value = ', '.join(str(v) if v is not None else "None" for v in value)
-                elif isinstance(value, dict):
-                    value = json.dumps(value, indent=2)
-                table_data.append([key, str(value)])
+                formatted_value = ReportGenerator.flatten_ssl_data(value)
+                # Truncate long values
+                if isinstance(formatted_value, str) and len(formatted_value) > max_length:
+                    formatted_value = formatted_value[:max_length] + '... [Truncated]'
+                table_data.append([key, formatted_value])
             return table_data
         except json.JSONDecodeError:
             return [["Error", "Invalid JSON data"]]
