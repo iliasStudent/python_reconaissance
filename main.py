@@ -4,6 +4,8 @@ import argparse
 import whois_lookup
 import ssl_certificate_info
 import report_generator
+import internetdb_lookup
+import ip_lookup
 
 
 def main():
@@ -18,6 +20,7 @@ def main():
 
     whois_info = whois_lookup.WHOISLookup.lookup(domain)
     ssl_info = ssl_certificate_info.SSLCertificateInfo.lookup(domain)
+    internetdb_info = internetdb_lookup.InternetdbLookup.fetch_json_internetdb_ipbased(ip_lookup.IpLookup.get_ip_address(domain))
 
     report_generator.ReportGenerator.print_results_to_console(whois_info, ssl_info)
 
