@@ -56,35 +56,39 @@ class ReportGenerator:
 
         # IP address section
         elements.append(Paragraph(f"IP Address: {ip_lookup.IpLookup.get_ip_address(domain)}", styles['Heading2']))
+
         # WHOIS section
-        elements.append(Paragraph("WHOIS Information:", styles['Heading2']))
-        whois_data = ReportGenerator.parse_json_for_table(whois_info) if isinstance(whois_info, str) else ReportGenerator.parse_ssl_for_table(whois_info)
-        whois_data_formatted = [[ReportGenerator.format_cell(cell, cell_style) for cell in row] for row in whois_data]
-        whois_table = RLTable(whois_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
-        whois_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                                        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                                        ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
-        elements.append(whois_table)
+        if(whois_info is not None):
+            elements.append(Paragraph("WHOIS Information:", styles['Heading2']))
+            whois_data = ReportGenerator.parse_json_for_table(whois_info) if isinstance(whois_info, str) else ReportGenerator.parse_ssl_for_table(whois_info)
+            whois_data_formatted = [[ReportGenerator.format_cell(cell, cell_style) for cell in row] for row in whois_data]
+            whois_table = RLTable(whois_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
+            whois_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                                            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                                            ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
+            elements.append(whois_table)
 
         # SSL section
-        elements.append(Paragraph("SSL Certificate Information:", styles['Heading2']))
-        ssl_data = ReportGenerator.parse_json_for_table(ssl_info) if isinstance(ssl_info, str) else ReportGenerator.parse_ssl_for_table(ssl_info)
-        ssl_data_formatted = [[ReportGenerator.format_cell(cell, cell_style) for cell in row] for row in ssl_data]
-        ssl_table = RLTable(ssl_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
-        ssl_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                                    ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
-        elements.append(ssl_table)
+        if(ssl_info is not None):
+            elements.append(Paragraph("SSL Certificate Information:", styles['Heading2']))
+            ssl_data = ReportGenerator.parse_json_for_table(ssl_info) if isinstance(ssl_info, str) else ReportGenerator.parse_ssl_for_table(ssl_info)
+            ssl_data_formatted = [[ReportGenerator.format_cell(cell, cell_style) for cell in row] for row in ssl_data]
+            ssl_table = RLTable(ssl_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
+            ssl_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                                        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                                        ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
+            elements.append(ssl_table)
 
         # InternetDB Information Section
-        elements.append(Paragraph("Security Scan Information:", styles['Heading2']))
-        internetdb_data = ReportGenerator.parse_json_for_table(json.dumps(internetdb_info))
-        internetdb_data_formatted = [[ReportGenerator.format_cell(cell, cell_style) for cell in row] for row in internetdb_data]
-        internetdb_table = RLTable(internetdb_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
-        internetdb_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                                              ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                                              ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
-        elements.append(internetdb_table)
+        if(internetdb_info is not None):
+            elements.append(Paragraph("Security Scan Information:", styles['Heading2']))
+            internetdb_data = ReportGenerator.parse_json_for_table(json.dumps(internetdb_info))
+            internetdb_data_formatted = [[ReportGenerator.format_cell(cell, cell_style) for cell in row] for row in internetdb_data]
+            internetdb_table = RLTable(internetdb_data_formatted, colWidths=[doc.width/3.0, 2*doc.width/3.0])
+            internetdb_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                                                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                                                ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
+            elements.append(internetdb_table)
 
         doc.build(elements)
         return pdf_filename
@@ -94,18 +98,21 @@ class ReportGenerator:
     def save_text_file(domain, whois_info, ssl_info, internetdb_info, output_dir):
         txt_filename = os.path.join(output_dir, f"{domain}_scan_results.txt")
         with open(txt_filename, 'w') as file:
-            file.write("WHOIS Information:\n")
-            file.write(whois_info + "\n\n")
+            if(whois_info is not None):
+                file.write("WHOIS Information:\n")
+                file.write(whois_info + "\n\n")
 
-            file.write("SSL Certificate Information:\n")
-            if isinstance(ssl_info, dict):
-                formatted_ssl_info = json.dumps(ssl_info, indent=2)
-                file.write(formatted_ssl_info + "\n")
-            else:
-                file.write(ssl_info + "\n")
+            if(ssl_info is not None):
+                file.write("SSL Certificate Information:\n")
+                if isinstance(ssl_info, dict):
+                    formatted_ssl_info = json.dumps(ssl_info, indent=2)
+                    file.write(formatted_ssl_info + "\n")
+                else:
+                    file.write(ssl_info + "\n")
 
-            file.write("InternetDB Information:\n")
-            file.write(json.dumps(internetdb_info, indent=2) + "\n")
+            if(internetdb_info is not None):
+                file.write("InternetDB Information:\n")
+                file.write(json.dumps(internetdb_info, indent=2) + "\n")
             
         return txt_filename
 
@@ -114,33 +121,35 @@ class ReportGenerator:
         console = Console()
 
         
+        if(whois_info is not None):
+            # WHOIS Information
+            whois_data = ReportGenerator.parse_json_for_table(whois_info) if isinstance(whois_info, str) else ReportGenerator.parse_ssl_for_table(whois_info)
+            whois_table = RichTable(title="WHOIS Information", show_header=True, header_style="bold magenta")
+            whois_table.add_column("Key", style="dim", width=12)
+            whois_table.add_column("Value")
+            for key, value in whois_data[1:]:
+                whois_table.add_row(key, value)
+            console.print(whois_table)
 
-        # WHOIS Information
-        whois_data = ReportGenerator.parse_json_for_table(whois_info) if isinstance(whois_info, str) else ReportGenerator.parse_ssl_for_table(whois_info)
-        whois_table = RichTable(title="WHOIS Information", show_header=True, header_style="bold magenta")
-        whois_table.add_column("Key", style="dim", width=12)
-        whois_table.add_column("Value")
-        for key, value in whois_data[1:]:
-            whois_table.add_row(key, value)
-        console.print(whois_table)
+        if(ssl_info is not None):
+            # SSL Information
+            ssl_data = ReportGenerator.parse_json_for_table(ssl_info) if isinstance(ssl_info, str) else ReportGenerator.parse_ssl_for_table(ssl_info)
+            ssl_table = RichTable(title="SSL Certificate Information", show_header=True, header_style="bold magenta")
+            ssl_table.add_column("Key", style="dim", width=12)
+            ssl_table.add_column("Value")
+            for key, value in ssl_data[1:]:
+                ssl_table.add_row(key, value)
+            console.print(ssl_table)
 
-        # SSL Information
-        ssl_data = ReportGenerator.parse_json_for_table(ssl_info) if isinstance(ssl_info, str) else ReportGenerator.parse_ssl_for_table(ssl_info)
-        ssl_table = RichTable(title="SSL Certificate Information", show_header=True, header_style="bold magenta")
-        ssl_table.add_column("Key", style="dim", width=12)
-        ssl_table.add_column("Value")
-        for key, value in ssl_data[1:]:
-            ssl_table.add_row(key, value)
-        console.print(ssl_table)
-
-        # Print InternetDB Information
-        internetdb_data = ReportGenerator.parse_json_for_table(json.dumps(internetdb_info))
-        internetdb_table = RichTable(title="Security Scan Information", show_header=True, header_style="bold magenta")
-        internetdb_table.add_column("Key", style="dim", width=12)
-        internetdb_table.add_column("Value")
-        for key, value in internetdb_data[1:]:
-            internetdb_table.add_row(key, value)
-        console.print(internetdb_table)
+        if(internetdb_info is not None):
+            # Print InternetDB Information
+            internetdb_data = ReportGenerator.parse_json_for_table(json.dumps(internetdb_info))
+            internetdb_table = RichTable(title="Security Scan Information", show_header=True, header_style="bold magenta")
+            internetdb_table.add_column("Key", style="dim", width=12)
+            internetdb_table.add_column("Value")
+            for key, value in internetdb_data[1:]:
+                internetdb_table.add_row(key, value)
+            console.print(internetdb_table)
 
     @staticmethod
     def flatten_ssl_data(value):
