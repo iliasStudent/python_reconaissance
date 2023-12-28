@@ -1,3 +1,8 @@
+############################
+# TargetVision             #
+# Coder: Ilias Elal-Lati   #
+############################
+
 from rich.console import Console
 import os
 import argparse
