@@ -31,12 +31,12 @@ Biedt een eenvoudige command-line interface voor het uitvoeren van scans en het 
 1. Doe een git clone van deze repository
 
 2. Voordat je de tool kan gebruiken, dien je de benodigde dependencies te installeren. 
-Dit kan je doen door de volgende commando's uit te voeren:  
+Dit kan je doen door het volgende commando uit te voeren:  
 ```pip install -r requirements.txt```
 
 ### Gebruik
 Om de tool te gebruiken, voer je het script uit met de domeinnaam als argument. Je kan ook specifieke scans selecteren.
-Hieronder vind je een voorbeeld van hoe je de script kan gebruiken:
+Hieronder vind je een voorbeeld van hoe je het script kan gebruiken:
 
 Alle scans: ```python main.py www.voorbeelddomein.com```
 
