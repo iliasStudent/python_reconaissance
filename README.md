@@ -54,3 +54,8 @@ Als geen specifieke scanoptie is opgegeven, voert het script standaard alle besc
 ### Uitvoer
 
 De tool genereert rapporten in PDF- en tekstformaat in de opgegeven output directory. Deze bestanden bevatten de verzamelde informatie in een georganiseerd en leesbaar formaat.
+
+### Belangrijk om te weten
+Soms kan de verkregen informatie zo groot zijn dat deze niet meer in de tabel past. Als gevolg hiervan zul je mogelijk de aanduiding "truncated" zien, wat betekent dat de overige informatie is ingekort en weggelaten.
+
+Je kunt de volledige set informatie terugvinden in het bijbehorende .txt-bestand binnen de output folder.
