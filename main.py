@@ -12,6 +12,7 @@ import report_generator
 import internetdb_lookup
 import ip_lookup
 import crawler
+import http_header
 
 # Dit is de main section
 def main():
@@ -26,12 +27,13 @@ def main():
     parser.add_argument("-s", "--ssl", help="Perform SSL scan", action="store_true")
     parser.add_argument("-i", "--internetdb", help="Perform InternetDB scan", action="store_true")
     parser.add_argument("-c", "--crawl", help="Perform crawl hyperlinks", action="store_true")
+    parser.add_argument("-t", "--header", help="Retrieve the http headers", action="store_true")
     args = parser.parse_args()
 
     # Hier zorgen we ervoor dat  alle scans standaard worden uitgevoerd indien de gebruiker niet specifieert welke scans dat die wilt uitvoeren.
     # Dit doen we door alle variabelen op True te zetten.
-    if not (args.whois or args.ssl or args.internetdb or args.crawl):
-        args.whois = args.ssl = args.internetdb = args.crawl = True
+    if not (args.whois or args.ssl or args.internetdb or args.crawl or args.header):
+        args.whois = args.ssl = args.internetdb = args.crawl = args.header = True
 
     # Domeinnaam extraheren van de parameter.
     domain = args.domain
@@ -48,6 +50,7 @@ def main():
     ssl_info = None
     internetdb_info = None
     crawling_info = None
+    header_info = None
 
     # Uitvoeren van de gevraagde scans door de gebruiker.
     if(args.whois):
@@ -56,6 +59,8 @@ def main():
         ssl_info = ssl_certificate_info.SSLCertificateInfo.lookup(domain)
     if(args.internetdb):
         internetdb_info = internetdb_lookup.InternetdbLookup.fetch_json_internetdb_ipbased(ip_lookup.IpLookup.get_ip_address(domain))
+    if(args.header):
+        header_info = http_header.HTTPHeaderFetcher.get_http_headers(domain)
     if(args.crawl):
         starting_url = f"https://{domain}"
         max_depth = 20  # Diepte van crawling (aantal subdirectories)
@@ -78,11 +83,11 @@ def main():
         internetdb_info = ordered_internetdb_info
         
     # Printen van de resultaten naar de console.
-    report_generator.ReportGenerator.print_results_to_console(whois_info, ssl_info, internetdb_info, crawling_info)
+    report_generator.ReportGenerator.print_results_to_console(whois_info, ssl_info, internetdb_info, crawling_info, header_info)
 
     # Opslaan van de resultaten in een tekstbestand en PDF en de paden naar deze bestanden opslaan in variabelen.
-    txt_filename = report_generator.ReportGenerator.save_text_file(domain, whois_info, ssl_info, internetdb_info, crawling_info, output_dir)
-    pdf_filename = report_generator.ReportGenerator.create_pdf(domain, whois_info, ssl_info, internetdb_info, crawling_info, output_dir)
+    txt_filename = report_generator.ReportGenerator.save_text_file(domain, whois_info, ssl_info, internetdb_info, crawling_info, header_info, output_dir)
+    pdf_filename = report_generator.ReportGenerator.create_pdf(domain, whois_info, ssl_info, internetdb_info, crawling_info, header_info, output_dir)
 
     # Gebruik maken van de Rich-library
     # Aangeven waar de resultaten zijn opgeslagen. 

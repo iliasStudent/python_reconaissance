@@ -33,7 +33,7 @@ class ReportGenerator:
             return [["Error", "Invalid JSON data"]]
 
     @staticmethod
-    def create_pdf(domain, whois_info, ssl_info, internetdb_info, found_links, output_dir):
+    def create_pdf(domain, whois_info, ssl_info, internetdb_info, found_links, http_headers, output_dir):
         # Creëert een PDF-bestand met de scanresultaten voor het opgegeven domein.
 
         pdf_filename = os.path.join(output_dir, f"{domain}_scan_results.pdf")
@@ -97,13 +97,20 @@ class ReportGenerator:
             for link in found_links:
                 elements.append(Paragraph(link, cell_style))
 
+        # HTTP Headers sectie schrijven als er HTTP header informatie beschikbaar is.
+        if http_headers:
+            elements.append(Paragraph("HTTP Headers:", styles['Heading2']))
+            for header, value in http_headers.items():
+                header_paragraph = Paragraph(f"{header}: {value}", cell_style)
+                elements.append(header_paragraph)
+
         # Bouw de PDF
         doc.build(elements)
         return pdf_filename
     
     
     @staticmethod
-    def save_text_file(domain, whois_info, ssl_info, internetdb_info, found_links, output_dir):
+    def save_text_file(domain, whois_info, ssl_info, internetdb_info, found_links, http_headers, output_dir):
         # Creëert een tekstbestand met de scanresultaten.
         txt_filename = os.path.join(output_dir, f"{domain}_scan_results.txt")
         with open(txt_filename, 'w') as file:
@@ -131,11 +138,19 @@ class ReportGenerator:
                 file.write("Found Links:\n")
                 for link in found_links:
                     file.write(link + "\n")
+                file.write("\n")
+
+            # HTTP Headers sectie schrijven als er HTTP header informatie beschikbaar is.
+            if http_headers:
+                file.write("HTTP Headers:\n")
+                for header, value in http_headers.items():
+                    file.write(f"{header}: {value}\n")
+                file.write("\n")  # Extra newline toevoegen.
             
         return txt_filename
 
     @staticmethod
-    def print_results_to_console(whois_info, ssl_info, internetdb_info, found_links):
+    def print_results_to_console(whois_info, ssl_info, internetdb_info, found_links, http_headers):
         # Creëert een console-uitvoer met behulp van de Rich-library.
         console = Console()
 
@@ -171,11 +186,20 @@ class ReportGenerator:
 
         # Links-sectie outputten als er links zijn gevonden.
         if found_links:
-            links_table = RichTable(title="Found Links", show_header=True, header_style="bold magenta")
+            links_table = RichTable(title="Crawled Links", show_header=True, header_style="bold magenta")
             links_table.add_column("URL", style="dim")
             for link in found_links:
                 links_table.add_row(link)
             console.print(links_table)
+
+        # HTTP Headers sectie outputten als er HTTP header informatie beschikbaar is.
+        if http_headers:
+            headers_table = RichTable(title="HTTP Headers", show_header=True, header_style="bold magenta")
+            headers_table.add_column("Header", style="dim", width=20)
+            headers_table.add_column("Value")
+            for header, value in http_headers.items():
+                headers_table.add_row(header, value)
+            console.print(headers_table)
 
     @staticmethod
     def flatten_ssl_data(value):
