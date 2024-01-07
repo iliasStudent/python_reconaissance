@@ -3,13 +3,21 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
 class Crawler:
+    @staticmethod
+    def get_domain(url):
+        # Extraheer het domein (SLD en TLD) uit een URL.
+        parsed_url = urlparse(url)
+        domain_parts = parsed_url.netloc.split('.')
+        # Extraheer SLD en TLD (bijvoorbeeld 'example' en 'com' uit 'www.example.com')
+        domain = '.'.join(domain_parts[-2:]) if len(domain_parts) >= 2 else parsed_url.netloc
+        return domain
 
     @staticmethod
     def is_same_domain(url1, url2):
-        # Controleert of twee URL's tot hetzelfde domein behoren.
+        # Controleer of twee URL's tot hetzelfde TLD en hetzelfde SLD behoren.
         # Dit wordt gedaan om te voorkomen dat de crawler niet uit de hand loopt en andere domeinen begint te scannen.
-        return urlparse(url1).netloc == urlparse(url2).netloc
-
+        return Crawler.get_domain(url1) == Crawler.get_domain(url2)
+   
     @staticmethod
     def crawl(starting_url, max_depth, max_links):
         # Start een webcrawling-sessie vanaf een start-URL (starting_url).
