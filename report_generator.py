@@ -33,7 +33,7 @@ class ReportGenerator:
             return [["Error", "Invalid JSON data"]]
 
     @staticmethod
-    def create_pdf(domain, whois_info, ssl_info, internetdb_info, output_dir):
+    def create_pdf(domain, whois_info, ssl_info, internetdb_info, found_links, output_dir):
         # Creëert een PDF-bestand met de scanresultaten voor het opgegeven domein.
 
         pdf_filename = os.path.join(output_dir, f"{domain}_scan_results.pdf")
@@ -91,13 +91,19 @@ class ReportGenerator:
                                                 ('ALIGN', (1, 1), (-1, -1), 'LEFT')]))
             elements.append(internetdb_table)
 
+        # Links-sectie schrijven als er links zijn gevonden.
+        if found_links:
+            elements.append(Paragraph("Crawled Links:", styles['Heading2']))
+            for link in found_links:
+                elements.append(Paragraph(link, cell_style))
+
         # Bouw de PDF
         doc.build(elements)
         return pdf_filename
     
     
     @staticmethod
-    def save_text_file(domain, whois_info, ssl_info, internetdb_info, output_dir):
+    def save_text_file(domain, whois_info, ssl_info, internetdb_info, found_links, output_dir):
         # Creëert een tekstbestand met de scanresultaten.
         txt_filename = os.path.join(output_dir, f"{domain}_scan_results.txt")
         with open(txt_filename, 'w') as file:
@@ -119,11 +125,17 @@ class ReportGenerator:
             if(internetdb_info is not None):
                 file.write("InternetDB Information:\n")
                 file.write(json.dumps(internetdb_info, indent=2) + "\n")
+
+            # Links-sectie schrijven als er links zijn gevonden.
+            if found_links:
+                file.write("Found Links:\n")
+                for link in found_links:
+                    file.write(link + "\n")
             
         return txt_filename
 
     @staticmethod
-    def print_results_to_console(whois_info, ssl_info, internetdb_info):
+    def print_results_to_console(whois_info, ssl_info, internetdb_info, found_links):
         # Creëert een console-uitvoer met behulp van de Rich-library.
         console = Console()
 
@@ -156,6 +168,14 @@ class ReportGenerator:
             for key, value in internetdb_data[1:]:
                 internetdb_table.add_row(key, value)
             console.print(internetdb_table)
+
+        # Links-sectie outputten als er links zijn gevonden.
+        if found_links:
+            links_table = RichTable(title="Found Links", show_header=True, header_style="bold magenta")
+            links_table.add_column("URL", style="dim")
+            for link in found_links:
+                links_table.add_row(link)
+            console.print(links_table)
 
     @staticmethod
     def flatten_ssl_data(value):
