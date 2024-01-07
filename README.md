@@ -19,9 +19,24 @@ Controleert de SSL-certificaat van een domein voor beveiligingsdoeleinden.
 Met behulp van deze scan kun je uitgebreide informatie verkrijgen, waaronder bijvoorbeeld de Subject Alternate Name (SAN). Hiermee kun je ontdekken welke andere verborgen domeinen in het bezit zijn van de eigenaar van de website.
 
 **InternetDB Scan**:  
+- poort scan
+- CVE scan
+- Aangeboden services scan
+- Hostname scan
+- Content Delivery Network scan
+
 Haalt gegevens op van de InternetDB API van Shodan voor verdere analyse van de domeinbeveiliging, waaronder informatie over geopende poorten, gedetecteerde diensten en bekende kwetsbaarheden.
 Deze scan vereist meerdere requests, wat door backbones als verdachte pakketjes of een potentiële DDoS-aanval kan worden beschouwd.
 Het gebruik van de API heeft dus als voordeel dat jouw IP-adres niet op een blacklist komt te staan aangezien de daadwerkelijke requests worden uitgevoerd door de Shodan-servers.
+
+**Web crawler**:  
+De webcrawler is een geavanceerde tool ontworpen om systematisch door websites te navigeren en informatie te verzamelen. 
+Het is speciaal ontwikkeld om binnen een specifiek domein en zijn subdomeinen te opereren, terwijl het navigeert door hyperlinks tot een opgegeven diepte.
+Deze functie onthult verborgen links in één oogopslag en biedt direct een overzicht van de inhoud van de website.
+
+**HTTP Header**:  
+Met deze functie heb je een overzicht van de HTTP header van de website.
+Het biedt uitgebreide informatie over de server, aangeboden services en de versies daarvan. Het vormt een waardevolle bron voor pentesters.
 
 **Rapportage**:  
 Genereert gedetailleerde rapporten in zowel PDF- als tekstformaat, naast het weergeven van informatie in de console.
@@ -37,8 +52,16 @@ Dit kan je doen door het volgende commando uit te voeren:
 ```pip install -r requirements.txt```
 
 ### Gebruik
-Om de tool te gebruiken, voer je het script uit met de domeinnaam als argument. Je kan ook specifieke scans selecteren.
-Hieronder vind je een voorbeeld van hoe je het script kan gebruiken:
+Om de tool te gebruiken, voer je het script uit met de domeinnaam als argument. Je kan ook specifieke scans selecteren door bepaalde flags mee te geven.
+
+**Beschikbare flags:**
+- -w = WHOIS scan
+- -s = SSL certificaat scan
+- -i = InternetDB scan
+- -c = Web crawler scan
+- -t = HTTP Headers scan
+  
+**Hieronder vind je een voorbeeld van hoe je het script kan gebruiken:**
 
 Alle scans: ```python main.py www.voorbeelddomein.com```
 
@@ -61,3 +84,8 @@ De tool genereert rapporten in PDF- en tekstformaat in de opgegeven output direc
 Soms kan de verkregen informatie zo groot zijn dat deze niet meer in de tabel past. Als gevolg hiervan zul je mogelijk de aanduiding "truncated" zien, wat betekent dat de overige informatie is ingekort en weggelaten.
 
 Je kunt de volledige set informatie terugvinden in het bijbehorende .txt-bestand binnen de output folder.
+
+### Have fun!
+Voer een scan uit op www.ap.be en op www.ba.be .  
+Je ziet een hoop vulnerabilities staan.  
+Niet goed he!
