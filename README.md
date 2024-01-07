@@ -7,6 +7,8 @@ Om deze uitdagingen het hoofd te bieden, komt een geïntegreerde scan tool zoals
 ### Beschrijving
 TargetVision is ontworpen om uitgebreide informatie te verstrekken over domeinen door verschillende scans uit te voeren zoals WHOIS, SSL-certificaat en security (Shodan) scans. Het is ideaal voor bug bounty hunters, security professionals, systeembeheerders of iedereen die inzicht wil krijgen in de status en beveiliging van een domein.
 
+In de broncode zijn uitgebreide commentaren toegevoegd om ervoor te zorgen dat de code niet alleen gemakkelijk te begrijpen is, maar ook eenvoudig uit te breiden en te troubleshooten in latere stadia.
+
 ### Functionaliteiten
 
 **WHOIS Scan**:  
