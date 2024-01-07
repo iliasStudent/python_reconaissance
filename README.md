@@ -5,7 +5,7 @@ Het zal waarschijnlijk bekend voorkomen. Tijdens het pentesten van een website p
 Om deze uitdagingen het hoofd te bieden, komt een geïntegreerde scan tool zoals TargetVision als een uiterst praktische oplossing naar voren. Deze tool automatiseert deze taken en bundelt ze in één overzichtelijke interface en PDF, waardoor je aanzienlijk efficiënter kunt werken. Hierdoor voorkom je niet alleen tijdverlies en fouten door handmatige invoer, maar je bent ook verzekerd van consistente resultaten. TargetVision biedt zo een gestroomlijnde en betrouwbare aanpak om informatie te verzamelen en het risico op het vergeten van belangrijke details te minimaliseren.
 
 ### Beschrijving
-TargetVision is ontworpen om uitgebreide informatie te verstrekken over domeinen door verschillende scans uit te voeren zoals WHOIS, SSL-certificaat en security (Shodan) scans. Het is ideaal voor bug bounty hunters, security professionals, systeembeheerders of iedereen die inzicht wil krijgen in de status en beveiliging van een domein.
+TargetVision is ontworpen om uitgebreide informatie te verstrekken over domeinen door verschillende scans uit te voeren zoals WHOIS, SSL-certificaat, open poorten, CVE's, hostnames, CDN, services, web crawler en http header scan. Het is ideaal voor bug bounty hunters, security professionals, systeembeheerders of iedereen die inzicht wil krijgen in de status en beveiliging van een domein.
 
 In de broncode zijn uitgebreide commentaren toegevoegd om ervoor te zorgen dat de code niet alleen gemakkelijk te begrijpen is, maar ook eenvoudig uit te breiden en te troubleshooten in latere stadia.
 
